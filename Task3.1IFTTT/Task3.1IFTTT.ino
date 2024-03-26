@@ -12,7 +12,7 @@ WiFiClient client;
 char   HOST_NAME[] = "maker.ifttt.com";
 
 String PATH_NAME   = "/trigger/sunlight/with/key/caH-RfyisLUV2vGsfTJfLw"; // change your EVENT-NAME and YOUR-KEY
-String queryString = "?";
+String queryString = "?value1=";
 
 BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
 
@@ -25,6 +25,8 @@ void setup() {
 
   Serial.begin(9600);
   while (!Serial);
+
+  Serial.println("Ready");
 }
 
 
@@ -45,6 +47,8 @@ void sendEmail(String value)
 
   connect();
 
+  Serial.println("Sending Email...");
+
   // make a HTTP request:
     // send HTTP header
     client.println("GET " + PATH_NAME + queryString + value + " HTTP/1.1");
@@ -53,18 +57,17 @@ void sendEmail(String value)
     client.println(); // end HTTP header
 
 
-    while (client.connected()) {
-      if (client.available()) {
-        // read an incoming byte from the server and print it to serial monitor:
-        char c = client.read();
-        Serial.print(c);
-      }
-    }
+    // while (client.connected()) {
+    //   if (client.available()) {
+    //     // read an incoming byte from the server and print it to serial monitor:
+    //     char c = client.read();
+    //     Serial.print(c);
+    //   }
+    // }
 
         // the server's disconnected, stop the client:
     client.stop();
-    Serial.println();
-    Serial.println("disconnected");
+    Serial.println("disconnected\n\n");
 }
 
 
@@ -78,11 +81,11 @@ void loop() {
   if (flag && lux < 500 ) 
   {
     flag = false;
-    sendEmail("value1=&value2=out of");
+    sendEmail("shade");
   }
   else if (!flag && lux > 500)
   {
       flag = true;
-      sendEmail("in");
+      sendEmail("sun");
   }
 }
