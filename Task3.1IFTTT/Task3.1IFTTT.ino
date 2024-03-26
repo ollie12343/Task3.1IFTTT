@@ -1,5 +1,7 @@
 #include <WiFiNINA.h>
 #include "secrets.h"
+#include <BH1750FVI.h>
+
 
 //please enter your sensitive data in the Secret tab
 char ssid[] = SECRET_SSID;
@@ -9,17 +11,26 @@ WiFiClient client;
 
 char   HOST_NAME[] = "maker.ifttt.com";
 
-String PATH_NAME   = "/trigger/light_toggle/with/key/caH-RfyisLUV2vGsfTJfLw"; // change your EVENT-NAME and YOUR-KEY
-String queryString = "?value1=57&value2=25";
+String PATH_NAME   = "/trigger/sunlight/with/key/caH-RfyisLUV2vGsfTJfLw"; // change your EVENT-NAME and YOUR-KEY
+String queryString = "?";
+
+BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
+
+bool flag = false;
 
 void setup() {
   // initialize WiFi connection
   WiFi.begin(ssid, pass);
+  LightSensor.begin();
 
   Serial.begin(9600);
   while (!Serial);
+}
 
-  // connect to web server on port 80:
+
+void connect()
+{
+    // connect to web server on port 80:
   if (client.connect(HOST_NAME, 80)) {
     // if connected:
     Serial.println("Connected to server");
@@ -29,12 +40,14 @@ void setup() {
   }
 }
 
-void loop() {
-  if (Serial.read() == 's') {
+void sendEmail(String value)
+{
 
-    // make a HTTP request:
+  connect();
+
+  // make a HTTP request:
     // send HTTP header
-    client.println("GET " + PATH_NAME + queryString + " HTTP/1.1");
+    client.println("GET " + PATH_NAME + queryString + value + " HTTP/1.1");
     client.println("Host: " + String(HOST_NAME));
     client.println("Connection: close");
     client.println(); // end HTTP header
@@ -48,9 +61,28 @@ void loop() {
       }
     }
 
-    // the server's disconnected, stop the client:
-    //client.stop();
-   // Serial.println();
-    //Serial.println("disconnected");
+        // the server's disconnected, stop the client:
+    client.stop();
+    Serial.println();
+    Serial.println("disconnected");
+}
+
+
+
+
+
+void loop() {
+
+  uint16_t lux = LightSensor.GetLightIntensity();
+
+  if (flag && lux < 500 ) 
+  {
+    flag = false;
+    sendEmail("value1=&value2=out of");
+  }
+  else if (!flag && lux > 500)
+  {
+      flag = true;
+      sendEmail("in");
   }
 }
