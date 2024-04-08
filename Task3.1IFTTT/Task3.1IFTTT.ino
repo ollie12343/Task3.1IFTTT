@@ -20,11 +20,15 @@ bool flag = false;
 
 void setup() {
   // initialize WiFi connection
-  WiFi.begin(ssid, pass);
   LightSensor.begin();
 
   Serial.begin(9600);
   while (!Serial);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+      WiFi.begin(ssid, pass);
+      delay(3000);
+  }
 
   Serial.println("Ready");
 }
@@ -67,6 +71,8 @@ void sendEmail(String value)
 
         // the server's disconnected, stop the client:
     client.stop();
+    Serial.print("Terrarium is now in "); Serial.println(value);
+    
     Serial.println("disconnected\n\n");
 }
 
@@ -77,6 +83,7 @@ void sendEmail(String value)
 void loop() {
 
   uint16_t lux = LightSensor.GetLightIntensity();
+  Serial.println(lux);
 
   if (flag && lux < 500 ) 
   {
@@ -88,4 +95,5 @@ void loop() {
       flag = true;
       sendEmail("sun");
   }
+  delay(5000);
 }
