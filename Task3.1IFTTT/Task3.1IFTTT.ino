@@ -10,7 +10,6 @@ char pass[] = SECRET_PASS;
 WiFiClient client;
 
 char   HOST_NAME[] = "maker.ifttt.com";
-
 String PATH_NAME   = "/trigger/sunlight/with/key/caH-RfyisLUV2vGsfTJfLw"; // change your EVENT-NAME and YOUR-KEY
 String queryString = "?value1=";
 
@@ -20,14 +19,17 @@ bool flag = false;
 
 void setup() {
   // initialize WiFi connection
+  WiFi.begin(ssid, pass);
   LightSensor.begin();
 
   Serial.begin(9600);
   while (!Serial);
   while (WiFi.status() != WL_CONNECTED)
-  {
-      WiFi.begin(ssid, pass);
+  { 
+      // delay is first because we already call it above.
       delay(3000);
+      WiFi.begin(ssid, pass);
+      
   }
 
   Serial.println("Ready");
@@ -50,6 +52,7 @@ void sendEmail(String value)
 {
 
   connect();
+  delay(500);
 
   Serial.println("Sending Email...");
 
@@ -61,17 +64,17 @@ void sendEmail(String value)
     client.println(); // end HTTP header
 
 
-    // while (client.connected()) {
-    //   if (client.available()) {
-    //     // read an incoming byte from the server and print it to serial monitor:
-    //     char c = client.read();
-    //     Serial.print(c);
-    //   }
-    // }
+    while (client.connected()) {
+      if (client.available()) {
+        // read an incoming byte from the server and print it to serial monitor:
+        char c = client.read();
+        Serial.print(c);
+      }
+    }
 
         // the server's disconnected, stop the client:
     client.stop();
-    Serial.print("Terrarium is now in "); Serial.println(value);
+    Serial.print("\nTerrarium is now in "); Serial.println(value);
     
     Serial.println("disconnected\n\n");
 }
@@ -83,17 +86,17 @@ void sendEmail(String value)
 void loop() {
 
   uint16_t lux = LightSensor.GetLightIntensity();
-  Serial.println(lux);
+  //Serial.println(lux);
 
-  if (flag && lux < 500 ) 
+  if (flag && lux < 300 ) 
   {
     flag = false;
     sendEmail("shade");
   }
-  else if (!flag && lux > 500)
+  else if (!flag && lux > 300)
   {
       flag = true;
-      sendEmail("sun");
+      sendEmail("sunlight");
   }
-  delay(5000);
+  //delay(5000);
 }
